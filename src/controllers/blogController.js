@@ -7,17 +7,12 @@ const createBlog = async function(req, res) {
         let blog = req.body
         let authorId = await authorModel.find().select({ _id: 1 })
         let authorIdArr = authorId.map((obj) => { return obj._id.toString() }) // Array formation of all the author id from our Author Collections
-        console.log(authorIdArr)
 
-        if (blog.authorId !== undefined) {
-            return res.status(400).send({ status: false, msg: "Invale Request" })
-        }
         if (authorIdArr.includes(blog.authorId)) {
-            return res.status(400).send({ status: false, msg: "Invale Request" })
+            let saveData = await blogModel.create(blog)
+            return res.status(201).send({ status: true, msg: saveData })
         }
-
-        let saveData = await blogModel.create(blog)
-        res.status(201).send({ status: true, msg: saveData })
+        return res.status(400).send({ status: false, msg: "Invale Request" })
 
     } catch (error) {
         res.status(500).send({ status: false, msg: error.message })
