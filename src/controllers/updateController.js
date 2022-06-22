@@ -8,21 +8,24 @@ const updateBlog = async function(req, res) {
         let title = req.query.title
         let body = req.query.body
         let t = req.query.tags
-        let sub = req.query.subcategory
-
-        console.log(t)
+        let sub = req.query.subCategory
 
         let b = await blogModel.find().select({ _id: 1 })
         let bArr = b.map((obj) => { return obj._id.toString() })
-        console.log(bArr.includes(blogId))
 
-        if (bArr.includes(blogId) == true) {
+        if (bArr.includes(blogId)) {
 
             let m = await blogModel.find({ _id: blogId })
-            let x = m.tags.push(t)
-            let y = m.subcategory.push(sub)
 
-            let result = await blogModel.updateOne({ _id: blogId }, { title: title, body: body, tags: x, subcategory: y, isPublished: true, publishedAt: Date.now() }, { new: true })
+            let result = await blogModel.findOneAndUpdate({ _id: blogId }, {
+                title: title,
+                body: body,
+                $addToSet: { tags: t, subCategory: sub }, //$addToSet :- is basically used to add any element in the array type only for one time
+                //$push is used as we can add elemetents in the array for multiple number of times.
+                isPublished: true,
+                publishedAt: Date.now()
+            }, { new: true })
+
             return res.status(200).send({ status: true, msg: result })
 
         }

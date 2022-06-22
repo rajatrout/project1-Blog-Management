@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
-const autherSchema = new mongoose.Schema( {
+const autherSchema = new mongoose.Schema({
     fname: {
-        type:String,
-        required:true
+        type: String,
+        required: true
     },
     lname: {
-        type:String,
-        required:true
+        type: String,
+        required: true
     },
     title: {
         type: String,
@@ -15,18 +15,15 @@ const autherSchema = new mongoose.Schema( {
         required: true
     },
     emailId: {
-        type:String,
-        unique:true,
-        requuired:true
+        type: String,
+        unique: true,
+        required: true
     },
     password: {
         type: String,
-        required:true
+        required: true
     },
-    
+
 }, { timestamps: true });
 
-module.exports = mongoose.model('Auther', autherSchema) 
-
-
-
+module.exports = mongoose.model('Auther', autherSchema)

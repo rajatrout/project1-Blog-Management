@@ -1,4 +1,3 @@
-//const { ObjectId } = require('bson');
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Schema.Types.ObjectId
 
@@ -16,26 +15,22 @@ const blogSchema = new mongoose.Schema({
         ref: "Author",
         required: true
     },
-    tags: {
-        type: []
-    },
+    tags: [],
     category: {
         type: String,
         required: true
     },
-    subCategory: {
-        type: []
+    subCategory: [],
+    isPublished: {
+        type: Boolean,
+        default: false
     },
+    publishedAt: Date,
     isDeleted: {
         type: Boolean,
         default: false
     },
-    deletedAt: Date,
-    publishedAt: Date,
-    isPublished: {
-        type: Boolean,
-        default: false
-    }
+    deletedAt: Date
 }, { timestamps: true });
 
 module.exports = mongoose.model('Blogs', blogSchema)
