@@ -1,24 +1,39 @@
-const { count } = require("console")
 const blogModel = require("../models/blogModel")
-const authorModel = require("../models/autherModel")
+const authorModel = require("../models/authorModel")
+const mongoose = require('mongoose')
+
 
 const deleteBlogByParams = async function(req, res) {
     try {
-        let blogId = req.params.blogId
+        let data = req.params.blogId
 
-        let b = await blogModel.find().select({ _id: 1 })
-        let bArr = b.map((obj) => { return obj._id.toString() })
-        console.log(bArr.includes(blogId))
-        if (bArr.includes(blogId)) {
+        // Edge Case 1 :- If the blog Id entered by user is not valid.
 
-            let a = await blogModel.updateOne({ _id: blogId, isDeleted: false }, { isDeleted: true, deletedAt: Date.now() })
-            return res.status(200).send({ status: true, msg: a })
-
+        if (!mongoose.Types.ObjectId.isValid(data)) {
+            return res.status(404).send({ status: false, msg: "Blog ID is not valid." })
         }
-        return res.status(404).send({ status: false, msg: "Blog document doesn't exists." })
+
+        let b = await blogModel.findById(data).select({ _id: 1, isDeleted: 1 })
+
+        // Edge Case 2 :- If the blog Id entered by user is not exists.
+
+        if (b == null) {
+            return res.status(400).send({ status: false, msg: "Blog document doesn't exists." })
+        }
+
+        // Edge Case 3 :- If the blog Id entered by user is already deleted.
+
+        if (b.isDeleted == true) {
+            return res.status(400).send({ status: false, msg: "Blog already deleted" })
+        }
+
+        // Blog document successfully deleted.
+
+        let a = await blogModel.updateOne({ _id: data, isDeleted: false }, { isDeleted: true, deletedAt: Date.now() })
+        return res.status(200).send({ status: true, data: a })
 
     } catch (error) {
-        res.status(500).send({ status: false, msg: error })
+        res.status(500).send({ status: false, msg: error.message })
     }
 }
 
@@ -37,7 +52,7 @@ const deleteBlogByQuery = async function(req, res) {
         if (authorId)
             blogData.authorId = authorId
         if (tags)
-            blogData.tags = tags.toString()
+            blogData.tags = { $in: tags.split(',') }
         if (isPublished)
             blogData.isPublished = isPublished
 
@@ -51,7 +66,7 @@ const deleteBlogByQuery = async function(req, res) {
         if (bArr.includes(blogId)) {
 
             let a = await blogModel.updateMany(blogData, { isDeleted: true, deletedAt: Date.now() })
-            return res.send({ status: true, msg: a })
+            return res.status(200).send({ status: true, data: a })
 
         }
         return res.status(404).send({ status: false, msg: "Blog document doesn't exists." })

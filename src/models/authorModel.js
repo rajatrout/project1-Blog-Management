@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
-const autherSchema = new mongoose.Schema({
+const authorSchema = new mongoose.Schema({
     fname: {
         type: String,
         required: true
@@ -32,4 +32,4 @@ const autherSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-module.exports = mongoose.model('Auther', autherSchema)
+module.exports = mongoose.model('Auther', authorSchema)

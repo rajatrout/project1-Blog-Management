@@ -1,16 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const autherController = require('../controllers/autherController')
+const authorController = require('../controllers/authorController')
 const blogController = require('../controllers/blogController.js')
 const getController = require('../controllers/getController.js')
 const updateController = require('../controllers/updateController')
 const deleteController = require('../controllers/deleteController.js')
 
-router.post("/author", autherController.createAuther)
+router.post("/author", authorController.createAuthor)
 
 router.post("/blogs", blogController.createBlog)
-
-router.get("/get/Blogs", getController.getBlog)
 
 router.get("/blogs", getController.blogs)
 
