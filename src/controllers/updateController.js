@@ -1,4 +1,3 @@
-const { count } = require("console")
 const blogModel = require("../models/blogModel")
 const authorModel = require("../models/autherModel")
 
