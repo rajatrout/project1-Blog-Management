@@ -14,25 +14,31 @@ const blogs = async(req, res) => {
         }
 
         let result = {}
-        let authorId = req.query.authorId
-        let category = req.query.category
-        let tags = req.query.tags
-        let subCategory = req.query.subCategory
-        console.log(authorId)
+        let { authorId, category, tags, subCategory } = req.query
+
+        if (!(authorId || category || tags || subCategory)) {
+            return res.status(400).send({ status: false, msg: "Kindly enter any value" })
+        }
 
         if (authorId != undefined)
             result.authorId = authorId
         if (category != undefined)
             result.category = category
         if (tags != undefined)
-            result.tags = { $in: tags.split(',') }
+            result.tags = tags
         if (subCategory != undefined)
-            result.subCategory = { $in: tags.split(',') }
-
-        console.log(tags.split(','))
+            result.subCategory = subCategory
 
         console.log(result)
-        let final = await blogModel.find(result)
+        let final = await blogModel.find({
+            $and: [{ authorId: authorId }, { category: category }, {
+                tags: { $in: tags },
+                subCategory: { $in: subCategory }
+            }],
+            isDeleted: false,
+            isPublished: true
+        })
+
         console.log(final)
 
         res.status(200).send({ status: true, data: final })
@@ -42,7 +48,4 @@ const blogs = async(req, res) => {
     }
 }
 
-
-
 module.exports.blogs = blogs
-    //module.exports.blogs1 = blogs1
