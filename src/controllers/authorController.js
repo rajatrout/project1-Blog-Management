@@ -49,12 +49,18 @@ const login = async(req, res) => {
         let username = req.body.emailId
         let password = req.body.password
 
-        let author = await authorModel.findOne({ emailId: username, password: password }).select({ emailId: 1, password: 1 })
-        if (!author) {
+        let authorEmailId = await authorModel.findOne({ emailId: username }).select({ emailId: 1 })
+        let authorPassword = await authorModel.findOne({ password: password }).select({ password: 1 })
+
+        if (username !== authorEmailId.emailId) {
+            return res.status(400).send({ status: false, msg: "Please enter the correct Email Id." })
+        }
+
+        if (!authorEmailId && !authorPassword) {
             return res.status(404).send({ status: false, msg: "Email Id and password are not matched." })
         }
 
-        let token = jwt.sign({ authorId: author._id.toString(), batch: "Radon" }, //payload
+        let token = jwt.sign({ authorId: authorEmailId._id.toString(), batch: "Radon" }, //payload
             "mahesh-rajat-blog" //secret key
         );
         res.setHeader("x-api-key", token)
