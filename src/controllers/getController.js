@@ -12,18 +12,19 @@ const blogs = async(req, res) => {
             return res.status(400).send({ status: false, msg: "Kindly enter any value" })
         }
 
-        if (authorId != undefined)
-            result.authorId = authorId
-        if (category != undefined)
-            result.category = category
-        if (tags != undefined)
-            result.tags = tags
-        if (subCategory != undefined)
-            result.subCategory = subCategory
+        // if (authorId != undefined)
+        //     result.authorId = authorId
+        // if (category != undefined)
+        //     result.category = category
+        // if (tags != undefined)
+        //     result.tags = tags
+        // if (subCategory != undefined)
+        //     result.subCategory = subCategory
+
         try {
             console.log(result)
             let final = await blogModel.find({
-                $and: [{ authorId: authorId }, { category: category }, {
+                $or: [{ authorId: authorId }, { category: category }, {
                     tags: { $in: tags },
                     subCategory: { $in: subCategory }
                 }],

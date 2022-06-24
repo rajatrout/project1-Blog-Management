@@ -19,11 +19,6 @@ const authorSchema = new mongoose.Schema({
         type: String,
         unique: true,
         required: true,
-        validate(value) {
-            if (!validator.isEmail(value)) {
-                throw new Error("Email is invalid")
-            }
-        }
     },
     password: {
         type: String,

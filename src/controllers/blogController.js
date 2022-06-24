@@ -1,45 +1,61 @@
 const { count } = require("console")
 const blogModel = require("../models/blogModel")
 const authorModel = require("../models/authorModel")
+const validator = require('validator');
 const mongoose = require('mongoose')
-const jwt = require('jsonwebtoken')
 
+// const stringV = async function(value) {
+//     let a = await typeof(value)
+//     if (a !== 'string') {
+//         return false
+//     } else return true
+// }
+const stringV = function(value) {
+    let a = typeof(value)
+    if (a !== 'string') {
+        return false
+    } else return true
+}
 
 //<--------------------------------------------Creating Blog------------------------------------------------->
 
 const createBlog = async function(req, res) {
+
     try {
+
         let data = req.body
         let authorId = req.body.authorId
         const { title, body, tags, category, subCategory } = data
-        let a = await authorModel.findById(authorId).select({ _id: 1 })
-        console.log(a)
 
         if ((data.authorId) == null) {
             return res.status(400).send({ status: false, msg: "Invalid Request" })
         }
 
-        if (typeof(title) !== `string`) {
+        if (!stringV(title)) {
             return res.status(400).send({ status: false, msg: "Title is not valid" })
         }
-        if (typeof(body) !== `string`) {
+        if (typeof(body) !== 'string') {
             return res.status(400).send({ status: false, msg: "Body is not valid" })
         }
 
-        if (!mongoose.Types.ObjectId.isValid(authorId)) {
+        // mongoose.Types.ObjectId.isValid(authorId) - (Using this not able to handle Number type entry)
+        if (typeof(authorId) !== 'string' || !validator.isMongoId(authorId)) {
             return res.status(404).send({ status: false, msg: "Author ID is not valid." })
         }
 
         if (typeof(tags) !== `object`) {
             return res.status(400).send({ status: false, msg: "Tags are not valid" })
         }
-        if (typeof(category) !== 'string') {
+
+        if (typeof(category) !== 'string' || !validator.isAlpha(category)) {
             return res.status(400).send({ status: false, msg: "Category is not valid" })
         }
+
         if (typeof(subCategory) !== `object`) {
             return res.status(400).send({ status: false, msg: "Sub-Category is not valid" })
         }
 
+        let a = await authorModel.findById(authorId).select({ _id: 1 })
         if (a == null) {
             return res.status(400).send({ status: false, msg: "Author ID doesn't exist's." })
         }
@@ -65,7 +81,7 @@ const updateBlog = async function(req, res) {
 
     // Edge Case 1 :- If the blog Id entered by user is not valid.
 
-    if (!mongoose.Types.ObjectId.isValid(data)) {
+    if (typeof(data) !== 'string' || !validator.isMongoId(data)) {
         return res.status(404).send({ status: false, msg: "Blog ID is not valid." })
     }
 
@@ -101,7 +117,7 @@ const deleteBlogByParams = async function(req, res) {
 
         // Edge Case 1 :- If the blog Id entered by user is not valid.
 
-        if (!mongoose.Types.ObjectId.isValid(data)) {
+        if (typeof(data) !== 'string' || !validator.isMongoId(data)) {
             return res.status(404).send({ status: false, msg: "Blog ID is not valid." })
         }
 
