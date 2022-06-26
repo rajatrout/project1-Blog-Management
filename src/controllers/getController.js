@@ -1,8 +1,8 @@
 const blogModel = require("../models/blogModel")
 const authorModel = require("../models/authorModel")
+const validator = require('validator')
 
-
-const blogs = async(req, res) => {
+const blogs1 = async(req, res) => {
     try {
 
         let result = {}
@@ -53,4 +53,36 @@ const blogs = async(req, res) => {
     }
 }
 
-module.exports.blogs = blogs
+
+const blogs = async(req, res) => {
+
+    let result = { isDeleted: false, isPublished: true }
+    let { authorId, category, tags, subCategory } = req.query
+
+    if (authorId) {
+        if (!validator.isMongoId(authorId)) {
+            return res.status(400).send({ status: false, msg: "Enter valid authorId" })
+        } else {
+            result.authorId = authorId
+        }
+    }
+
+    if (category) {
+        result.category = category
+    }
+
+    if (tags) {
+        result.tags = { $in: [tags] }
+    }
+    if (subCategory) {
+        result.subCategory = { $in: [subCategory] }
+    }
+
+    console.log(result)
+
+    let blog = await blogModel.find(result)
+    console.log(blog)
+    return res.status(200).send({ status: true, data: blog })
+}
+
+module.exports.blogs = blogs;

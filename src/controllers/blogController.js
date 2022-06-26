@@ -3,18 +3,21 @@ const blogModel = require("../models/blogModel")
 const authorModel = require("../models/authorModel")
 const validator = require('validator');
 const mongoose = require('mongoose')
+const jwt = require("jsonwebtoken");
 
-// const stringV = async function(value) {
-//     let a = await typeof(value)
-//     if (a !== 'string') {
-//         return false
-//     } else return true
-// }
+
 const stringV = function(value) {
     let a = typeof(value)
     if (a !== 'string') {
-        return false
-    } else return true
+        return true
+    } else return false
+}
+
+const idV = function(value) {
+    let a = validator.isMongoId(value)
+    if (!a) {
+        return true
+    } else return false
 }
 
 //<--------------------------------------------Creating Blog------------------------------------------------->
@@ -22,24 +25,21 @@ const stringV = function(value) {
 const createBlog = async function(req, res) {
 
     try {
+        const { title, body, authorId, tags, category, subCategory } = req.body
 
-        let data = req.body
-        let authorId = req.body.authorId
-        const { title, body, tags, category, subCategory } = data
-
-        if ((data.authorId) == null) {
+        if ((authorId) == null) {
             return res.status(400).send({ status: false, msg: "Invalid Request" })
         }
 
-        if (!stringV(title)) {
+        if (stringV(title)) {
             return res.status(400).send({ status: false, msg: "Title is not valid" })
         }
-        if (typeof(body) !== 'string') {
+        if (stringV(body)) {
             return res.status(400).send({ status: false, msg: "Body is not valid" })
         }
 
         // mongoose.Types.ObjectId.isValid(authorId) - (Using this not able to handle Number type entry)
-        if (typeof(authorId) !== 'string' || !validator.isMongoId(authorId)) {
+        if (stringV(authorId) || idV(authorId)) {
             return res.status(404).send({ status: false, msg: "Author ID is not valid." })
         }
 
@@ -47,7 +47,7 @@ const createBlog = async function(req, res) {
             return res.status(400).send({ status: false, msg: "Tags are not valid" })
         }
 
-        if (typeof(category) !== 'string' || !validator.isAlpha(category)) {
+        if (stringV(category) || !validator.isAlpha(category)) {
             return res.status(400).send({ status: false, msg: "Category is not valid" })
         }
 
@@ -63,7 +63,7 @@ const createBlog = async function(req, res) {
 
         // The blog is created. 
 
-        let saveData = await blogModel.create(data)
+        let saveData = await blogModel.create(req.body)
         return res.status(201).send({ status: true, data: saveData })
 
     } catch (error) {
@@ -72,40 +72,71 @@ const createBlog = async function(req, res) {
 }
 
 
+//<--------------------------------------------Get Blog details------------------------------------------------->
+
+const getblogs = async(req, res) => {
+
+    let result = { isDeleted: false, isPublished: true }
+    let { authorId, category, tags, subCategory } = req.query
+
+    if (authorId) {
+        if (idV(authorId)) {
+            return res.status(400).send({ status: false, msg: "Enter valid authorId" })
+        } else {
+            result.authorId = authorId
+        }
+    }
+
+    if (category) {
+        result.category = category
+    }
+
+    if (tags) {
+        result.tags = { $in: [tags] }
+    }
+    if (subCategory) {
+        result.subCategory = { $in: [subCategory] }
+    }
+
+    console.log(result)
+
+    let blog = await blogModel.find(result)
+    console.log(blog)
+    return res.status(200).send({ status: true, data: blog })
+}
+
+
 //<--------------------------------------------Update Blog------------------------------------------------->
 
 const updateBlog = async function(req, res) {
 
-    let data = req.params.blogId
-    const { title, body, tags, subCategory } = req.body
+    try {
+        let data = req.params.blogId
+        const { title, body, tags, subCategory } = req.body
 
-    // Edge Case 1 :- If the blog Id entered by user is not valid.
+        if (!(title || body || tags || subCategory)) {
+            return res.status(400).send({ status: false, msg: "Please enter all details (Title, Body, tags, subCategory)." })
+        }
 
-    if (typeof(data) !== 'string' || !validator.isMongoId(data)) {
-        return res.status(404).send({ status: false, msg: "Blog ID is not valid." })
+        let b = await blogModel.findById(data).select({ _id: 1, isDeleted: 1 })
+        if (b.isDeleted == true) {
+            return res.status(400).send({ status: false, msg: "Blog is deleted" })
+        }
+
+        let result = await blogModel.findOneAndUpdate({ _id: data }, {
+            title: title,
+            body: body,
+            $addToSet: { tags: tags, subCategory: subCategory }, //$addToSet :- is basically used to add any element in the array type only for one time
+            //$push is used as we can add elemetents in the array for multiple number of times.
+            isPublished: true,
+            publishedAt: Date.now()
+        }, { new: true })
+
+        return res.status(200).send({ status: true, data: result })
+
+    } catch (error) {
+        return res.status(500).send({ status: false, msg: error.message })
     }
-
-    let b = await blogModel.findById(data).select({ _id: 1, isDeleted: 1 })
-
-    // Edge Case 2 :- If the blog Id entered by user is not exists.
-
-    if (b == null) {
-        return res.status(400).send({ status: false, msg: "Blog document doesn't exists." })
-    }
-
-    // Blog document successfully updated
-
-    let result = await blogModel.findOneAndUpdate({ _id: data }, {
-        title: title,
-        body: body,
-        $addToSet: { tags: tags, subCategory: subCategory }, //$addToSet :- is basically used to add any element in the array type only for one time
-        //$push is used as we can add elemetents in the array for multiple number of times.
-        isPublished: true,
-        publishedAt: Date.now()
-    }, { new: true })
-
-    return res.status(200).send({ status: true, data: result })
-
 }
 
 
@@ -115,30 +146,20 @@ const deleteBlogByParams = async function(req, res) {
     try {
         let data = req.params.blogId
 
-        // Edge Case 1 :- If the blog Id entered by user is not valid.
-
-        if (typeof(data) !== 'string' || !validator.isMongoId(data)) {
-            return res.status(404).send({ status: false, msg: "Blog ID is not valid." })
-        }
-
         let b = await blogModel.findById(data).select({ _id: 1, isDeleted: 1 })
 
-        // Edge Case 2 :- If the blog Id entered by user is not exists.
+        // // Edge Case 2 :- If the blog Id entered by user is not exists.
 
-        if (b == null) {
-            return res.status(400).send({ status: false, msg: "Blog document doesn't exists." })
-        }
-
-        // Edge Case 3 :- If the blog Id entered by user is already deleted.
+        // if (b == null) {
+        //     return res.status(400).send({ status: false, msg: "Blog document doesn't exists." })
+        // }
 
         if (b.isDeleted == true) {
             return res.status(400).send({ status: false, msg: "Blog already deleted" })
         }
 
-        // Blog document successfully deleted.
-
         let a = await blogModel.updateOne({ _id: data, isDeleted: false }, { isDeleted: true, deletedAt: Date.now() })
-        return res.status(200).send({ status: true, data: a })
+        return res.status(200).send({ status: true, data: "The blog is deleted" })
 
     } catch (error) {
         res.status(500).send({ status: false, msg: error.message })
@@ -155,20 +176,33 @@ const deleteBlogByQuery = async function(req, res) {
         return res.status(400).send({ status: false, msg: "Kindly enter any value" })
     }
 
-    if (!mongoose.Types.ObjectId.isValid(authorId)) {
-        return res.status(404).send({ status: false, msg: "Blog ID is not valid." })
+    if (stringV(authorId) || idV(authorId)) {
+        return res.status(404).send({ status: false, msg: "Author ID is not valid." })
     }
+    // console.log(authorId)
 
-    let b = await blogModel.findById(authorId).select({ _id: 1, isDeleted: 1 })
+    let b = await blogModel.find({ authorId: authorId }).select({ _id: 1, isDeleted: 1 })
 
     if (b == null) {
         return res.status(400).send({ status: false, msg: "Blog document doesn't exists." })
     }
 
+    let token = req.headers["x-Api-key"]
+    if (!token) token = req.headers["x-api-key"]
+    let decodedToken = jwt.verify(token, "mahesh-rajat-blog");
+
+
+    let authorLoggedIn = decodedToken.authorId
+
+    if (authorId != authorLoggedIn) {
+
+        return res.send({ status: false, msg: 'Access is Denied' })
+
+    }
+
     // if (b.isDeleted == true) {
     //     return res.status(400).send({ status: false, msg: "Blog already deleted" })
     // }
-
 
     const d = await blogModel.updateMany({
         $or: [{ category: category },
@@ -176,7 +210,7 @@ const deleteBlogByQuery = async function(req, res) {
             { tags: { $in: [tags] } },
             { subCategory: { $in: [subCategory] } }
         ]
-    }, { isDeleted: true, deletedAt: Date.now() })
+    }, { isDeleted: true, deletedAt: Date.now(), new: true })
 
     return res.status(200).send({ status: true, data: d })
 }
@@ -185,6 +219,7 @@ const deleteBlogByQuery = async function(req, res) {
 
 
 module.exports.createBlog = createBlog
+module.exports.getblogs = getblogs;
 module.exports.updateBlog = updateBlog
 module.exports.deleteBlogByParams = deleteBlogByParams
 module.exports.deleteBlogByQuery = deleteBlogByQuery

@@ -18,11 +18,11 @@ router.post("/blogs", blogController.createBlog)
 
 
 //Get Blogs (With Authentication)
-router.get("/blogs", middlewareAuth.auth, getController.blogs)
+router.get("/blogs", middlewareAuth.auth, getController.getblogs)
 
 
 //Update Blogs (With Authentication and Authorization)
-router.put("/blogs/:blogId/:authorId", middlewareAuth.auth, middlewareAuth.authorisation, blogController.updateBlog)
+router.put("/blogs/:blogId/", middlewareAuth.auth, middlewareAuth.authorisation, blogController.updateBlog)
 
 
 //Delete Blogs By Path Parameters (With Authentication and Authorization)
@@ -30,14 +30,14 @@ router.delete("/blogs/:blogId", middlewareAuth.auth, middlewareAuth.authorisatio
 
 
 //Delete Blogs By Query Parameters (With Authentication and Authorization)
-router.delete("/blogs", blogController.deleteBlogByQuery)
+router.delete("/blogs", middlewareAuth.auth, blogController.deleteBlogByQuery)
 
 
 
 
 
 
-router.post("/login/:authorId", middlewareAuth.auth)
-router.post("/m/:authorId", middlewareAuth.authorisation)
+router.post("/login/:blodId", middlewareAuth.auth)
+router.post("/m/:blogId", middlewareAuth.authorisation)
 
 module.exports = router;
