@@ -16,8 +16,8 @@ const createAuthor = async function(req, res) {
         const { fname, lname, title, emailId, password } = req.body
 
         if (!(fname && lname && title && emailId && password)) {
-            return res.status(400).send({ status: false, msg: "Please enter all the details." })
-        } // Here we can also add more edge cases so that if any of the details is absent if(fanme.length ==0)
+            return res.status(400).send({ status: false, msg: "Please enter all the details(fname, lname, title, emailId, password)." })
+        }
 
         if (stringV(fname) || !validator.isAlpha(fname)) {
             return res.status(400).send({ status: false, msg: "First name is not valid" })
@@ -51,15 +51,12 @@ const createAuthor = async function(req, res) {
         }
 
         let duplicatePassword = await authorModel.findOne({ password: password })
+
         if (duplicatePassword) {
             return res.status(400).send({ status: false, msg: "Password is very common, try to use different password." })
         }
 
         let saveData = await authorModel.create(req.body)
-
-        // if (!saveData) {
-        //     return res.status(400).send({ status: false, msg: "Data is not created" })
-        // }
 
         res.status(201).send({ status: true, data: saveData })
 
@@ -91,7 +88,7 @@ const login = async(req, res) => {
             "mahesh-rajat-blog" //secret key
         );
         res.setHeader("x-api-key", token)
-        res.status(201).send({ status: true, data: token })
+        res.status(200).send({ status: true, data: token })
 
     } catch (error) {
         res.status(500).send({ status: false, msg: error.message })
