@@ -88,7 +88,7 @@ const login = async(req, res) => {
             "mahesh-rajat-blog" //secret key
         );
         res.setHeader("x-api-key", token)
-        res.status(200).send({ status: true, data: token })
+        res.status(201).send({ status: true, data: token })
 
     } catch (error) {
         res.status(500).send({ status: false, msg: error.message })
