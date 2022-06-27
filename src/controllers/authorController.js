@@ -76,12 +76,12 @@ const login = async(req, res) => {
 
         let author = await authorModel.findOne({ emailId: username }).select({ emailId: 1, password: 1 })
         if (!author) {
-            return res.status(404).send({ status: false, msg: "Please enter correct email." })
+            return res.status(400).send({ status: false, msg: "Please enter correct email." })
         }
 
 
         if (password !== author.password) {
-            return res.status(400).send({ status: false, msg: "Email Id and password are not matched. Enter the correct password." })
+            return res.status(401).send({ status: false, msg: "Email Id and password are not matched. Enter the correct password." })
         }
 
         let token = jwt.sign({ authorId: author._id.toString(), batch: "Radon" }, //payload
