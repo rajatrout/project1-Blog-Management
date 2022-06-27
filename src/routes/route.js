@@ -13,7 +13,7 @@ router.post("/login", authorController.login)
 
 
 //Create Blog
-router.post("/blogs", blogController.createBlog)
+router.post("/blogs", middlewareAuth.auth, blogController.createBlog)
 
 
 //Get Blogs (With Authentication)
