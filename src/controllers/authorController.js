@@ -11,6 +11,7 @@ const stringV = function(value) {
 }
 
 const createAuthor = async function(req, res) {
+
     try {
 
         const { fname, lname, title, emailId, password } = req.body

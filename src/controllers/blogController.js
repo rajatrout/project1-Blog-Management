@@ -119,33 +119,48 @@ const getblogs = async(req, res) => {
 const updateBlog = async function(req, res) {
 
     try {
+        let final = {}
         let data = req.params.blogId
         const { title, body, tags, subCategory } = req.body
 
-        if (!(title && body && tags && subCategory)) {
-            return res.status(400).send({ status: false, msg: "Please enter all details (Title, Body, tags, subCategory)." })
+        if (!(title || body || tags || subCategory)) {
+            return res.status(400).send({ status: false, msg: "Please enter details (Title, Body, tags, subCategory)." })
         }
 
-        let b = await blogModel.findById(data).select({ _id: 1, isDeleted: 1 })
+        let b = await blogModel.findOne({ _id: data })
         if (b.isDeleted == true) {
             return res.status(404).send({ status: false, msg: "Blog is deleted" })
         }
-
-        let result = await blogModel.findOneAndUpdate({ _id: data }, {
-            title: title,
-            body: body,
-            $addToSet: { tags: tags, subCategory: subCategory }, //$addToSet :- is basically used to add any element in the array type only for one time
-            //$push is used as we can add elemetents in the array for multiple number of times.
-            isPublished: true,
-            publishedAt: Date.now()
-        }, { new: true })
-
+        if (title) {
+            final.title = title
+        }
+        if (body) {
+            final.body = body
+        }
+        if (tags) {
+            b.tags.push(tags)
+            final.tags = b.tags
+        }
+        if (subCategory) {
+            b.subCategory.push(subCategory)
+            final.subCategory = b.subCategory
+        }
+        console.log(final)
+            // if (isPublished) {
+            //     final.isPublished = true
+            // }
+            // if (publishedAt) {
+            //     final.isPublished = Date.now()
+            // }
+        let result = await blogModel.findOneAndUpdate({ _id: data }, final, { new: true })
+            // console.log(result)
         return res.status(200).send({ status: true, data: result })
 
     } catch (error) {
         return res.status(500).send({ status: false, msg: error.message })
     }
 }
+
 
 
 //<--------------------------------------Delete Blog by Path Parameters---------------------------------------->
