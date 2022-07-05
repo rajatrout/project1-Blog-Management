@@ -21,7 +21,7 @@ const auth = async function(req, res, next) {
 
         if (!token) { return res.status(401).send({ status: false, msg: "Token must be present in request headers" }) }
 
-        let decoded = jwt.decode(token)
+        let decoded = jwt.verify(token, "mahesh-rajat-blog")
         if (!decoded) {
             return res.status(401).send({ status: false, msg: "Token is Incorrect" })
         }
