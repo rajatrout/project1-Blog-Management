@@ -3,14 +3,6 @@ const validator = require('validator');
 const authorModel = require("../models/authorModel");
 const blogModel = require("../models/blogModel")
 
-
-const stringV = function(value) {
-    let a = typeof(value)
-    if (a !== 'string') {
-        return true
-    } else return false
-}
-
 const idV = function(value) {
     let a = validator.isMongoId(value)
     if (!a) {

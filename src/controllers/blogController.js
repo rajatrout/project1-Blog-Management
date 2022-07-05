@@ -1,4 +1,3 @@
-const { count } = require("console")
 const blogModel = require("../models/blogModel")
 const authorModel = require("../models/authorModel")
 const validator = require('validator');
@@ -119,11 +118,11 @@ const getblogs = async(req, res) => {
 const updateBlog = async function(req, res) {
 
     try {
-        let final = {}
+        let final = { isPublished: true, publishedAt: Date.now() }
         let data = req.params.blogId
         const { title, body, tags, subCategory } = req.body
 
-        if (!(title || body || tags || subCategory)) {
+        if (Object.keys(req.body) === 0) {
             return res.status(400).send({ status: false, msg: "Please enter details (Title, Body, tags, subCategory)." })
         }
 
@@ -146,14 +145,8 @@ const updateBlog = async function(req, res) {
             final.subCategory = b.subCategory
         }
         console.log(final)
-            // if (isPublished) {
-            //     final.isPublished = true
-            // }
-            // if (publishedAt) {
-            //     final.isPublished = Date.now()
-            // }
         let result = await blogModel.findOneAndUpdate({ _id: data }, final, { new: true })
-            // console.log(result)
+
         return res.status(200).send({ status: true, data: result })
 
     } catch (error) {
@@ -196,7 +189,6 @@ const deleteBlogByQuery = async function(req, res) {
     if (stringV(authorId) || idV(authorId)) {
         return res.status(400).send({ status: false, msg: "Author ID is not valid." })
     }
-    // console.log(authorId)
 
     let b = await blogModel.find({ authorId: authorId }).select({ _id: 1, isDeleted: 1 })
 
