@@ -20,8 +20,8 @@ const auth = async function(req, res, next) {
         if (!token) token = req.headers["x-api-key"]
 
         if (!token) { return res.status(401).send({ status: false, msg: "Token must be present in request headers" }) }
-
-        let decoded = jwt.verify(token, "mahesh-rajat-blog")
+  
+        let decoded = jwt.verify(token, "mahesh-rajat-blog") //      jwt.decode(token)
         if (!decoded) {
             return res.status(401).send({ status: false, msg: "Token is Incorrect" })
         }
