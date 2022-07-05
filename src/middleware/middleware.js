@@ -12,7 +12,7 @@ const idV = function(value) {
 
 //<-------------------------    ------------Authentication---------------------------------------------->
 
-const auth = async function(req, res, next) {
+const auth = function(req, res, next) {
 
     try {
 
@@ -21,21 +21,23 @@ const auth = async function(req, res, next) {
 
         if (!token) { return res.status(401).send({ status: false, msg: "Token must be present in request headers" }) }
   
-        let decoded = jwt.verify(token, "mahesh-rajat-blog") //      jwt.decode(token)
-        if (!decoded) {
-            return res.status(401).send({ status: false, msg: "Token is Incorrect" })
-        }
+        jwt.verify(token, "mahesh-rajat-blog",function(err, decodedToken){ 
+            
+            if(err) return res.status(401).send({ status: false, msg: "Token is Incorrect" })
+            req.token = decodedToken.authorId
+            next()
+            
+        })
+        
 
     } catch (error) {
         return res.status(500).send({ status: false, msg: error.message })
     }
-
-    next()
 }
 
 //<-----------------------------Authorization to user to only its own data------------------------------------>
 
-const authorisation = async function(req, res, next) {
+const authorisation = function(req, res, next) {
 
     try {
         let token = req.headers["X-Api-Key"]
