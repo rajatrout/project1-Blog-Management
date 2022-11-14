@@ -45,7 +45,7 @@ const createBlog = async function(req, res) {
             return res.status(400).send({ status: false, msg: "Tags are not valid" })
         }
 
-        if (stringV(category) || !validator.isAlpha(category)) {
+        if (stringV(category)) {
             return res.status(400).send({ status: false, msg: "Category is not valid" })
         }
 
@@ -64,7 +64,7 @@ const createBlog = async function(req, res) {
             return res.status(201).send({ status: true, data: saveData })
         }
 
-        let saveData = await blogModel.create(req.body)
+        const saveData = await blogModel.create(req.body)
         return res.status(201).send({ status: true, data: saveData })
 
     } catch (error) {
@@ -78,7 +78,7 @@ const createBlog = async function(req, res) {
 const getblogs = async(req, res) => {
     try {
         let result = { isDeleted: false, isPublished: true }
-        let { authorId, category, tags, subCategory } = req.query
+        const { authorId, category, tags, subCategory } = req.query
 
         if (authorId) {
             if (idV(authorId)) {
@@ -98,15 +98,14 @@ const getblogs = async(req, res) => {
         if (subCategory) {
             result.subCategory = { $in: [subCategory] }
         }
-
-        console.log(result)
-
-        let blog = await blogModel.find(result)
+console.log(result);
+        const blog = await blogModel.find(result)
         if (blog == null) {
             return res.status(404).send({ status: true, msg: "No document found." })
         }
 
         return res.status(200).send({ status: true, data: blog })
+ 
     } catch (error) {
         return res.status(500).send({ status: false, msg: error.message })
     }
@@ -118,8 +117,9 @@ const getblogs = async(req, res) => {
 const updateBlog = async function(req, res) {
 
     try {
+
         let final = { isPublished: true, publishedAt: Date.now() }
-        let data = req.params.blogId
+        const data = req.params.blogId
         const { title, body, tags, subCategory } = req.body
 
         if (Object.keys(req.body) === 0) {
@@ -144,7 +144,7 @@ const updateBlog = async function(req, res) {
             b.subCategory.push(subCategory)
             final.subCategory = b.subCategory
         }
-        console.log(final)
+
         let result = await blogModel.findOneAndUpdate({ _id: data }, final, { new: true })
 
         return res.status(200).send({ status: true, data: result })
@@ -190,9 +190,9 @@ const deleteBlogByQuery = async function(req, res) {
         return res.status(400).send({ status: false, msg: "Author ID is not valid." })
     }
 
-    let b = await blogModel.find({ authorId: authorId }).select({ _id: 1, isDeleted: 1 })
+    let blog = await blogModel.find({ authorId: authorId }).select({ _id: 1, isDeleted: 1 })
 
-    if (b == null) {
+    if (blog == null) {
         return res.status(404).send({ status: false, msg: "Blog document doesn't exists." })
     }
 
@@ -209,7 +209,7 @@ const deleteBlogByQuery = async function(req, res) {
 
     }
 
-    const d = await blogModel.updateMany({
+    const update = await blogModel.updateMany({
         $or: [{ category: category },
             { authorId: authorId },
             { tags: { $in: [tags] } },
@@ -217,7 +217,7 @@ const deleteBlogByQuery = async function(req, res) {
         ]
     }, { isDeleted: true, deletedAt: Date.now(), new: true })
 
-    return res.status(200).send({ status: true, data: d })
+    return res.status(200).send({ status: true, data: update })
 }
 
 

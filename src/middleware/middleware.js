@@ -37,32 +37,34 @@ const auth = function(req, res, next) {
 
 //<-----------------------------Authorization to user to only its own data------------------------------------>
 
-const authorisation = function(req, res, next) {
+const authorisation = async function(req, res, next) {
 
     try {
+    
         let token = req.headers["X-Api-Key"]
         if (!token) token = req.headers["x-api-key"]
 
-        let blogId = req.params.blogId
+        const blogId = req.params.blogId
 
         if (idV(blogId)) {
             return res.status(404).send({ status: false, msg: "Blog ID is not valid." })
         }
 
-        let a = await blogModel.findById(blogId).select({ authorId: 1, _id: 0 })
-        if (a == null) {
+        const blog = await blogModel.findById(blogId).select({ authorId: 1, _id: 0 })
+        if (blog == null) {
             return res.status(404).send({ status: false, msg: "Blog document doesn't exist.." })
         }
 
-        let authorId = a.authorId.toString()
+        const authorId = blog.authorId.toString()
 
-        let decodedToken = jwt.verify(token, "mahesh-rajat-blog");
+        const decodedToken = jwt.verify(token, "mahesh-rajat-blog");
 
         if (authorId != decodedToken.authorId) {
 
             return res.status(403).send({ status: false, msg: 'Access is Denied' })
 
         }
+        console.log('authorization');
     } catch (error) {
         return res.status(500).send({ status: false, msg: error.message })
     }
@@ -71,3 +73,4 @@ const authorisation = function(req, res, next) {
 
 module.exports.auth = auth
 module.exports.authorisation = authorisation
+ 
